@@ -11,7 +11,7 @@ import (
 )
 
 // dateFormat is the format used for the Last IS Update field
-const dateFormat = "2006-01-02T15:04:05-0700"
+const dateFormat = "2006-01-02T15:04:05.0-0700"
 
 // CompareIssues gets the list of GitHub issues updated since the `since` date,
 // gets the list of JIRA issues which have GitHub ID custom fields in that list,
@@ -37,15 +37,18 @@ func CompareIssues(config cfg.Config, ghClient clients.GitHubClient, jiraClient 
 		ids[i] = v.GetID()
 	}
 
-	jiraIssues, err := jiraClient.ListIssues(ids)
-	if err != nil {
-		return err
-	}
-
 	log.Debug("Collected all JIRA issues")
 
 	for _, ghIssue := range ghIssues {
 		found := false
+
+		ids := make([]int, 1)
+		ids[0] = *ghIssue.ID
+		jiraIssues, err := jiraClient.ListIssues(ids)
+		if err != nil {
+			return err
+		}
+
 		for _, jIssue := range jiraIssues {
 			id, _ := jIssue.Fields.Unknowns.Int(config.GetFieldKey(cfg.GitHubID))
 			if int64(*ghIssue.ID) == id {
@@ -158,9 +161,9 @@ func UpdateIssue(config cfg.Config, ghIssue github.Issue, jIssue jira.Issue, ghC
 		return err
 	}
 
-	if err := CompareComments(config, ghIssue, issue, ghClient, jClient); err != nil {
-		return err
-	}
+	//if err := CompareComments(config, ghIssue, issue, ghClient, jClient); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -174,7 +177,7 @@ func CreateIssue(config cfg.Config, issue github.Issue, ghClient clients.GitHubC
 
 	fields := jira.IssueFields{
 		Type: jira.IssueType{
-			Name: "Task", // TODO: Determine issue type
+			Name: "Bug", // TODO: Determine issue type
 		},
 		Project:     config.GetProject(),
 		Summary:     issue.GetTitle(),
@@ -211,9 +214,9 @@ func CreateIssue(config cfg.Config, issue github.Issue, ghClient clients.GitHubC
 
 	log.Debugf("Created JIRA issue %s!", jIssue.Key)
 
-	if err := CompareComments(config, issue, jIssue, ghClient, jClient); err != nil {
-		return err
-	}
+	//if err := CompareComments(config, issue, jIssue, ghClient, jClient); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
