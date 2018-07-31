@@ -1,0 +1,8 @@
+# Ports must be defined in docker-composer.override.yml
+version: '3'
+services:
+  app:
+    image: registry.gentics.com/issue-sync:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
